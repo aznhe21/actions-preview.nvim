@@ -1,4 +1,4 @@
-local config = require("lsp-code-actions.config")
+local config = require("actions-preview.config")
 
 local M = {}
 

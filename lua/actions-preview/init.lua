@@ -1,5 +1,5 @@
-local config = require("lsp-code-actions.config")
-local Action = require("lsp-code-actions.action").Action
+local config = require("actions-preview.config")
+local Action = require("actions-preview.action").Action
 
 local actions = require("telescope.actions")
 local state = require("telescope.actions.state")
