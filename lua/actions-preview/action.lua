@@ -2,6 +2,7 @@ local config = require("actions-preview.config")
 
 local M = {}
 
+-- based on https://github.com/neovim/neovim/blob/v0.7.2/runtime/lua/vim/lsp/util.lua#L106-L124
 --- Convert UTF index to `encoding` index.
 --- Convenience wrapper around vim.str_byteindex
 ---Alternative to vim.str_byteindex that takes an encoding.
@@ -33,6 +34,7 @@ local function get_lines(bufnr)
   return vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 end
 
+-- based on https://github.com/neovim/neovim/blob/v0.7.2/runtime/lua/vim/lsp/util.lua#L277-L298
 ---@private
 --- Position is a https://microsoft.github.io/language-server-protocol/specifications/specification-current/#position
 --- Returns a zero-indexed column, since set_lines() does the conversion to
@@ -69,6 +71,7 @@ local function get_eol(bufnr)
   end
 end
 
+-- based on https://github.com/neovim/neovim/blob/v0.7.2/runtime/lua/vim/lsp/util.lua#L336-L464
 local function apply_text_edits(text_edits, lines, offset_encoding)
   -- Fix reversed range and indexing each text_edits
   local index = 0
@@ -143,6 +146,7 @@ local function diff_text_edits(text_edits, bufnr, offset_encoding)
   return vim.diff(old_text .. "\n", table.concat(lines, eol) .. "\n", config.diff)
 end
 
+-- based on https://github.com/neovim/neovim/blob/v0.7.2/runtime/lua/vim/lsp/util.lua#L492-L523
 local function diff_text_document_edit(text_document_edit, offset_encoding)
   local text_document = text_document_edit.textDocument
   local bufnr = vim.uri_to_bufnr(text_document.uri)
@@ -150,6 +154,7 @@ local function diff_text_document_edit(text_document_edit, offset_encoding)
   return diff_text_edits(text_document_edit.edits, bufnr, offset_encoding)
 end
 
+-- based on https://github.com/neovim/neovim/blob/v0.7.2/runtime/lua/vim/lsp/util.lua#L717-L756
 local function diff_workspace_edit(workspace_edit, offset_encoding)
   local diff = ""
   if workspace_edit.documentChanges then
@@ -286,6 +291,7 @@ function Action:preview(callback)
   end)
 end
 
+-- based on https://github.com/neovim/neovim/blob/v0.7.2/runtime/lua/vim/lsp/buf.lua#L506-L529
 function Action:apply()
   self:resolve(function(action)
     local client = vim.lsp.get_client_by_id(self.client_id)
