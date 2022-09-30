@@ -1,6 +1,34 @@
 local default_config = {
-  backend = { "telescope" },
+  backend = { "telescope", "nui" },
   telescope = nil,
+  nui = {
+    dir = "col",
+    keymap = nil,
+    layout = {
+      position = "50%",
+      size = {
+        width = "60%",
+        height = "90%",
+      },
+      min_width = 40,
+      min_height = 10,
+      relative = "editor",
+    },
+    preview = {
+      size = "60%",
+      border = {
+        style = "rounded",
+        padding = { 0, 1 },
+      },
+    },
+    select = {
+      size = "40%",
+      border = {
+        style = "rounded",
+        padding = { 0, 1 },
+      },
+    },
+  },
   diff = {
     ctxlen = 3,
   },
