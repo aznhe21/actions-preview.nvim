@@ -1,12 +1,6 @@
+local backend = require("actions-preview.backend")
 local config = require("actions-preview.config")
 local Action = require("actions-preview.action").Action
-
-local actions = require("telescope.actions")
-local state = require("telescope.actions.state")
-local pickers = require("telescope.pickers")
-local previewers = require("telescope.previewers")
-local finders = require("telescope.finders")
-local conf = require("telescope.config").values
 
 local M = {}
 
@@ -39,59 +33,18 @@ local function range_from_selection()
 end
 
 local function on_code_action_results(results, ctx)
-  local acts = {}
+  local actions = {}
   for client_id, result in pairs(results) do
     for _, action in pairs(result.result or {}) do
-      table.insert(acts, Action.new(ctx, client_id, action))
+      table.insert(actions, Action.new(ctx, client_id, action))
     end
   end
-  if #acts == 0 then
+  if #actions == 0 then
     vim.notify("No code actions available", vim.log.levels.INFO)
     return
   end
 
-  local opts = vim.deepcopy(config.telescope) or require("telescope.themes").get_dropdown()
-  pickers
-    .new(opts, {
-      prompt_title = "Code actions:",
-      previewer = previewers.new_buffer_previewer({
-        title = "Code Action Preview",
-        define_preview = function(self, entry)
-          entry.value:preview(function(preview)
-            preview = preview or { syntax = "", text = "preview not available" }
-
-            vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, vim.split(preview.text, "\n", true))
-            vim.api.nvim_buf_set_option(self.state.bufnr, "syntax", preview.syntax)
-          end)
-        end,
-      }),
-      finder = finders.new_table({
-        results = acts,
-        entry_maker = function(action)
-          local title = action:title()
-          return {
-            display = title,
-            ordinal = title,
-            value = action,
-          }
-        end,
-      }),
-      sorter = conf.generic_sorter(opts),
-      attach_mappings = function(prompt_bufnr)
-        actions.select_default:replace(function()
-          local selection = state.get_selected_entry()
-          actions.close(prompt_bufnr)
-          if not selection then
-            return
-          end
-
-          selection.value:apply()
-        end)
-
-        return true
-      end,
-    })
-    :find()
+  backend.select(config, actions)
 end
 
 local function code_action_request(params)

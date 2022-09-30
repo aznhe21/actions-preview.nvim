@@ -1,4 +1,5 @@
 local default_config = {
+  backend = { "telescope" },
   telescope = nil,
   diff = {
     ctxlen = 3,
