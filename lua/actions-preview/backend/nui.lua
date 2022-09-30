@@ -25,7 +25,7 @@ function M.select(config, actions)
     size = nil,
     border = {
       text = {
-        top = "Code actions:",
+        top = "Code Actions",
       },
     },
   }), {

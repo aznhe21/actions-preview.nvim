@@ -16,7 +16,7 @@ function M.select(config, acts)
   local opts = vim.deepcopy(config) or require("telescope.themes").get_dropdown()
   pickers
     .new(opts, {
-      prompt_title = "Code actions:",
+      prompt_title = "Code Actions",
       previewer = previewers.new_buffer_previewer({
         title = "Code Action Preview",
         define_preview = function(self, entry)
