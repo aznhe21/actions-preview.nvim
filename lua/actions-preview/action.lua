@@ -283,7 +283,7 @@ function Action:preview(callback)
       local command = type(action.command) == "table" and action.command or action
       self.previewed = {
         syntax = "",
-        text = string.format("Run command %s (%s)", command.title, command.command),
+        text = string.format("Command: %s (%s)", command.title, command.command),
       }
     end
 
