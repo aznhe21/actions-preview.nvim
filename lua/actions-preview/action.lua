@@ -224,8 +224,8 @@ function Action.new(context, client_id, action)
   if
     not action.edit
     and client
-    and type(client.resolved_capabilities.code_action) == "table"
-    and client.resolved_capabilities.code_action.resolveProvider
+    and type(client.server_capabilities.codeActionProvider) == "table"
+    and client.server_capabilities.codeActionProvider.resolveProvider
   then
     -- needs to be resolved
     resolved = nil
