@@ -4,7 +4,7 @@ local Action = require("actions-preview.action").Action
 
 local M = {}
 
--- based on https://github.com/neovim/neovim/blob/11167ab6d569994dd0a4f58155c84b118706380c/runtime/lua/vim/lsp/buf.lua#L153-L178
+-- based on https://github.com/neovim/neovim/blob/v0.8.0/runtime/lua/vim/lsp/buf.lua#L153-L178
 ---@private
 ---@return table {start={row, col}, end={row, col}} using (1, 0) indexing
 local function range_from_selection()
@@ -59,7 +59,7 @@ function M.setup(opts)
   config.setup(opts)
 end
 
--- based on https://github.com/neovim/neovim/blob/11167ab6d569994dd0a4f58155c84b118706380c/runtime/lua/vim/lsp/buf.lua#L890-L944
+-- based on https://github.com/neovim/neovim/blob/v0.8.0/runtime/lua/vim/lsp/buf.lua#L890-L944
 --- Selects a code action available at the current
 --- cursor position.
 ---
