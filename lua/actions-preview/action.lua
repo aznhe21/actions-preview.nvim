@@ -197,19 +197,22 @@ local function diff_workspace_edit(workspace_edit, offset_encoding)
     return diff
   end
 
-  for uri, changes in pairs(workspace_edit.changes) do
-    local path = vim.fn.fnamemodify(vim.uri_to_fname(uri), ":.")
-    local bufnr = vim.uri_to_bufnr(uri)
+  local all_changes = workspace_edit.changes
+  if all_changes and not vim.tbl_isempty(all_changes) then
+    for uri, changes in pairs(all_changes) do
+      local path = vim.fn.fnamemodify(vim.uri_to_fname(uri), ":.")
+      local bufnr = vim.uri_to_bufnr(uri)
 
-    diff = diff
-      .. table.concat({
-        string.format("diff --code-actions a/%s b/%s", path, path),
-        string.format("--- a/%s", path),
-        string.format("+++ b/%s", path),
-        vim.trim(diff_text_edits(changes, bufnr, offset_encoding)),
-        "",
-        "",
-      }, "\n")
+      diff = diff
+        .. table.concat({
+          string.format("diff --code-actions a/%s b/%s", path, path),
+          string.format("--- a/%s", path),
+          string.format("+++ b/%s", path),
+          vim.trim(diff_text_edits(changes, bufnr, offset_encoding)),
+          "",
+          "",
+        }, "\n")
+    end
   end
 
   return diff
@@ -272,8 +275,8 @@ function Action:preview(callback)
   self:resolve(function(action)
     local client = vim.lsp.get_client_by_id(self.client_id)
 
-    if action.edit then
-      local diff = diff_workspace_edit(action.edit, client.offset_encoding)
+    local diff = action.edit and diff_workspace_edit(action.edit, client.offset_encoding)
+    if diff ~= nil and diff ~= "" then
       self.previewed = {
         syntax = "diff",
         text = diff,
