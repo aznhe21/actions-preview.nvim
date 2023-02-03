@@ -21,6 +21,10 @@ function M.select(config, acts)
         title = "Code Action Preview",
         define_preview = function(self, entry)
           entry.value:preview(function(preview)
+            if self.state.bufnr == nil then
+              return
+            end
+
             preview = preview or { syntax = "", text = "preview not available" }
 
             vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, vim.split(preview.text, "\n", true))

@@ -37,6 +37,10 @@ function M.select(config, actions)
       keymap = config.keymap,
       on_change = function(item)
         item.action:preview(function(preview)
+          if nui_preview.bufnr == nil then
+            return
+          end
+
           preview = preview or { syntax = "", text = "preview not available" }
 
           vim.api.nvim_buf_set_lines(nui_preview.bufnr, 0, -1, false, vim.split(preview.text, "\n", true))
