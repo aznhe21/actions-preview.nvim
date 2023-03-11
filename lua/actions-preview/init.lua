@@ -6,8 +6,10 @@ local M = {}
 
 -- based on https://github.com/neovim/neovim/blob/v0.8.0/runtime/lua/vim/lsp/buf.lua#L153-L178
 ---@private
+---@param bufnr integer
+---@param mode "v"|"V"
 ---@return table {start={row, col}, end={row, col}} using (1, 0) indexing
-local function range_from_selection()
+local function range_from_selection(bufnr, mode)
   -- TODO: Use `vim.region()` instead https://github.com/neovim/neovim/pull/13896
 
   -- [bufnum, lnum, col, off]; both row and column 1-indexed
@@ -26,6 +28,13 @@ local function range_from_selection()
     start_row, end_row = end_row, start_row
     start_col, end_col = end_col, start_col
   end
+
+  if mode == "V" then
+    start_col = 1
+    local lines = vim.api.nvim_buf_get_lines(bufnr, end_row-1, end_row, true)
+    end_col = #lines[1]
+  end
+
   return {
     ["start"] = { start_row, start_col - 1 },
     ["end"] = { end_row, end_col - 1 },
@@ -96,7 +105,7 @@ function M.code_actions(options)
     local end_ = assert(options.range["end"], "range must have a `end` property")
     params = vim.lsp.util.make_given_range_params(start, end_)
   elseif mode == "v" or mode == "V" then
-    local range = range_from_selection()
+    local range = range_from_selection(0, mode)
     params = vim.lsp.util.make_given_range_params(range.start, range["end"])
   else
     params = vim.lsp.util.make_range_params()
