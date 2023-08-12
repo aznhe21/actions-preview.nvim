@@ -1,6 +1,6 @@
 # actions-preview.nvim
 
-<https://user-images.githubusercontent.com/2226696/193223264-d4ea9140-d53b-4660-a8e6-0e9ee2597c51.mp4>
+<https://github.com/aznhe21/actions-preview.nvim/assets/2226696/fd927cdd-dce4-4741-98ec-3c40320ce624>
 
 A neovim plugin that preview code with LSP code actions applied.
 
@@ -38,8 +38,25 @@ require("actions-preview").setup {
   },
   -- priority list of preferred backend
   backend = { "telescope", "nui" },
-  -- options for telescope.nvim: https://github.com/nvim-telescope/telescope.nvim#themes
-  telescope = require("telescope.themes").get_dropdown(),
+
+  -- options related to telescope.nvim
+  telescope = vim.tbl_extend(
+    "force",
+    -- telescope theme: https://github.com/nvim-telescope/telescope.nvim#themes
+    require("telescope.themes").get_dropdown(),
+    -- a table for customizing content
+    {
+      -- a function to make a table containing the values to be displayed.
+      -- fun(action: Action): { title: string, client_name: string|nil }
+      make_value = nil,
+
+      -- a function to make a function to be used in `display` of a entry.
+      -- see also `:h telescope.make_entry` and `:h telescope.pickers.entry_display`.
+      -- fun(values: { index: integer, action: Action, title: string, client_name: string }[]): function
+      make_make_display = nil,
+    },
+  ),
+
   -- options for nui.nvim components
   nui = {
     -- component direction. "col" or "row"
@@ -92,6 +109,7 @@ require("actions-preview").setup {
 ## Acknowledgements
 
 - [weilbith/nvim-code-action-menu](https://github.com/weilbith/nvim-code-action-menu) for idea.
+- [nvim-telescope/telescope-ui-select.nvim](https://github.com/nvim-telescope/telescope-ui-select.nvim) for UI.
 
 ## LICENSE
 
