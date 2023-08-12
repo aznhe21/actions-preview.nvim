@@ -49,7 +49,9 @@ function M.select(config, acts)
   local finders = require("telescope.finders")
   local conf = require("telescope.config").values
 
-  local make_value = config.make_value or default_make_value
+  local opts = vim.deepcopy(config) or require("telescope.themes").get_dropdown()
+
+  local make_value = opts.make_value or default_make_value
   local values = {}
   for idx, act in ipairs(acts) do
     local value = make_value(act)
@@ -76,9 +78,8 @@ function M.select(config, acts)
     )
   end
 
-  local make_display = (config.make_make_display or default_make_make_display)(values)
+  local make_display = (opts.make_make_display or default_make_make_display)(values)
 
-  local opts = vim.deepcopy(config) or require("telescope.themes").get_dropdown()
   pickers
     .new(opts, {
       prompt_title = "Code Actions",
