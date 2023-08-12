@@ -243,6 +243,11 @@ function Action.new(context, client_id, action)
   }, { __index = Action })
 end
 
+function Action:client_name()
+  local client = vim.lsp.get_client_by_id(self.client_id)
+  return client and client.name or ""
+end
+
 function Action:title()
   local title = self.action.title:gsub("\r\n", "\\r\\n")
   return title:gsub("\n", "\\n")
