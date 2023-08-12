@@ -106,6 +106,43 @@ require("actions-preview").setup {
 }
 ```
 
+## FAQ
+
+### How to make it look like README (above)?
+
+Here is a config to reproduce the README.
+
+```lua
+require("actions-preview").setup {
+  telescope = {
+    sorting_strategy = "ascending",
+    layout_strategy = "vertical",
+    layout_config = {
+      width = 0.8,
+      height = 0.9,
+      prompt_position = "top",
+      preview_cutoff = 20,
+      preview_height = function(_, _, max_lines)
+        return max_lines - 15
+      end,
+    },
+  },
+}
+```
+
+### Why do I get `Command: ...` instead of a diff?
+
+TL;DR: Because of implementation limitations in some Language Servers.
+It is not possible to compute and display diffs in these Language Servers.
+
+Unfortunately, some Language Servers realize Code Actions by means of [Command],
+which can perform any operation, instead of [TextEdit], which notifies text changes.
+In these Language Servers, we cannot get the result of text changes by a Code Action,
+and as a result, we cannot compute and display diffs.
+
+[TextEdit]: https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textEdit
+[Command]: https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#command
+
 ## Acknowledgements
 
 - [weilbith/nvim-code-action-menu](https://github.com/weilbith/nvim-code-action-menu) for idea.
