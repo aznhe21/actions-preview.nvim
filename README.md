@@ -130,14 +130,14 @@ require("actions-preview").setup {
 }
 ```
 
-### Why do I get `Command: ...` instead of a diff?
+### Why do I get `Preview is not available for this action` instead of a diff?
 
-TL;DR: Because of implementation limitations in some Language Servers.
-It is not possible to compute and display diffs in these Language Servers.
+TL;DR: Because of implementation limitations in some language servers.
+It is not possible to compute and display diffs in these language servers.
 
-Unfortunately, some Language Servers realize Code Actions by means of [Command],
+Unfortunately, some language servers realize Code Actions by means of [Command],
 which can perform any operation, instead of [TextEdit], which notifies text changes.
-In these Language Servers, we cannot get the result of text changes by a Code Action,
+In these language servers, we cannot get the result of text changes by a Code Action,
 and as a result, we cannot compute and display diffs.
 
 [TextEdit]: https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textEdit
