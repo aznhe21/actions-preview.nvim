@@ -291,7 +291,12 @@ function Action:preview(callback)
       local command = type(action.command) == "table" and action.command or action
       self.previewed = {
         syntax = "",
-        text = string.format("Command: %s (%s)", command.title, command.command),
+        text = string.format(
+          "Preview is not available for this action (command=%s).\n"
+            .. "This is due to limitations of your language server (%s) implementation.",
+          command.command,
+          self:client_name()
+        ),
       }
     end
 
