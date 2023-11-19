@@ -54,7 +54,7 @@ require("actions-preview").setup {
       -- see also `:h telescope.make_entry` and `:h telescope.pickers.entry_display`.
       -- fun(values: { index: integer, action: Action, title: string, client_name: string }[]): function
       make_make_display = nil,
-    },
+    }
   ),
 
   -- options for nui.nvim components
