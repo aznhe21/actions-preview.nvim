@@ -125,9 +125,11 @@ local function apply_text_edits(text_edits, lines, offset_encoding)
       table.remove(lines, e.start_row + 1)
     end
     for i, t in pairs(e.text) do
-      if text_edit.insertTextFormat == 2 then
-        t = vim.lsp.util.parse_snippet(t)
-      end
+      -- FIXME: parse_snippet is deprecated since neovim 0.10
+      -- if text_edit.insertTextFormat == 2 then
+      --   -- remove placeholders
+      --   t = vim.lsp.util.parse_snippet(t)
+      -- end
 
       table.insert(lines, e.start_row + i, t)
     end
