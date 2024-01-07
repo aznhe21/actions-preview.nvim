@@ -34,7 +34,7 @@ local function diff_text_edits(text_edits, bufnr, offset_encoding)
 
   local lines = get_lines(bufnr)
   local new_lines = apply_text_edits(text_edits, lines, offset_encoding)
-  return vim.diff(table.concat(lines, eol) .. "\n", table.concat(new_lines, eol) .. "\n", config.diff)
+  return vim.diff(table.concat(lines, eol) .. eol, table.concat(new_lines, eol) .. eol, config.diff)
 end
 
 -- based on https://github.com/neovim/neovim/blob/v0.7.2/runtime/lua/vim/lsp/util.lua#L492-L523
