@@ -32,6 +32,11 @@ local default_config = {
   diff = {
     ctxlen = 3,
   },
+  highlight_command = {
+    -- hl.delta(),
+    -- hl.diff_so_fancy(),
+    -- hl.diff_highlight(),
+  },
 }
 local unmodifiable_config = {
   diff = {
@@ -46,6 +51,14 @@ function M.setup(opts)
   local config = vim.tbl_deep_extend("force", default_config, opts or {}, unmodifiable_config)
   for k, v in pairs(config) do
     M[k] = v
+  end
+end
+
+function M.get_highlight_command()
+  for _, cmd in ipairs(M.highlight_command) do
+    if cmd.is_available() then
+      return cmd
+    end
   end
 end
 
