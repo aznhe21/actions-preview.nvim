@@ -177,7 +177,6 @@ function Action:preview(callback)
         syntax = "diff",
         text = diff,
       }
-      callback(self.previewed)
     elseif action.command then
       local command = type(action.command) == "table" and action.command or action
       self.previewed = {
