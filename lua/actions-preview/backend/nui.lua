@@ -9,7 +9,6 @@ function M.select(config, actions)
   local Layout = require("nui.layout")
   local Menu = require("nui.menu")
   local Popup = require("nui.popup")
-  local event = require("nui.utils.autocmd").event
 
   local nui_preview = Popup(vim.tbl_deep_extend("force", config.preview, {
     size = nil,
@@ -20,7 +19,8 @@ function M.select(config, actions)
     },
   }))
 
-  local nui_select = Menu(
+  local nui_select
+  nui_select = Menu(
     vim.tbl_deep_extend("force", config.select, {
       position = 0,
       size = nil,
@@ -43,8 +43,10 @@ function M.select(config, actions)
 
           preview = preview or { syntax = "", text = "preview not available" }
 
+          vim.api.nvim_buf_set_option(nui_preview.bufnr, "modifiable", true)
           vim.api.nvim_buf_set_lines(nui_preview.bufnr, 0, -1, false, vim.split(preview.text, "\n", true))
           vim.api.nvim_buf_set_option(nui_preview.bufnr, "syntax", preview.syntax)
+          vim.api.nvim_buf_set_option(nui_preview.bufnr, "modifiable", false)
         end)
       end,
       on_submit = function(item)
@@ -60,12 +62,7 @@ function M.select(config, actions)
       Layout.Box(nui_select, { size = config.select.size }),
     }, { dir = config.dir })
   )
-
   layout:mount()
-  nui_select:on(event.BufLeave, function()
-    nui_preview:unmount()
-    nui_select:unmount()
-  end)
 end
 
 return M
