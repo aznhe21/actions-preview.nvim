@@ -36,6 +36,10 @@ local default_make_make_display = function(values)
   end
 end
 
+local job_is_running = function(job_id)
+  return vim.fn.jobwait({ job_id }, 0)[1] == -1
+end
+
 function M.is_supported()
   local ok, _ = pcall(require, "telescope")
   return ok
@@ -45,9 +49,10 @@ function M.select(config, acts)
   local actions = require("telescope.actions")
   local state = require("telescope.actions.state")
   local pickers = require("telescope.pickers")
-  local previewers = require("telescope.previewers")
+  local Previewer = require("telescope.previewers.previewer")
   local finders = require("telescope.finders")
   local conf = require("telescope.config").values
+  local utils = require("telescope.utils")
 
   local opts = vim.deepcopy(config) or require("telescope.themes").get_dropdown()
 
@@ -80,22 +85,88 @@ function M.select(config, acts)
 
   local make_display = (opts.make_make_display or default_make_make_display)(values)
 
+  local buffers = {}
+  local term_ids = {}
+
   pickers
     .new(opts, {
       prompt_title = "Code Actions",
-      previewer = previewers.new_buffer_previewer({
+      previewer = Previewer:new({
         title = "Code Action Preview",
-        define_preview = function(self, entry)
-          entry.value.action:preview(function(preview)
-            if self.state.bufnr == nil then
-              return
+        setup = function(_self)
+          return {}
+        end,
+        teardown = function(self)
+          self.state.winid = nil
+          self.state.bufnr = nil
+
+          for _, bufnr in ipairs(buffers) do
+            local term_id = term_ids[bufnr]
+            if term_id and job_is_running(term_id) then
+              vim.fn.jobstop(term_id)
             end
+            utils.buf_delete(bufnr)
+          end
 
-            preview = preview or { syntax = "", text = "preview not available" }
+          buffers = {}
+          term_ids = {}
+        end,
+        preview_fn = function(self, entry, status)
+          local preview_winid = status.layout and status.layout.preview and status.layout.preview.winid
+            or status.preview_win
 
-            vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, vim.split(preview.text, "\n", true))
-            vim.api.nvim_buf_set_option(self.state.bufnr, "syntax", preview.syntax)
-          end)
+          local do_preview = false
+          local bufnr = buffers[entry.index]
+          if not bufnr then
+            bufnr = vim.api.nvim_create_buf(false, true)
+            buffers[entry.index] = bufnr
+            do_preview = true
+
+            vim.api.nvim_win_set_option(preview_winid, "winhl", "Normal:TelescopePreviewNormal")
+            vim.api.nvim_win_set_option(preview_winid, "signcolumn", "no")
+            vim.api.nvim_win_set_option(preview_winid, "foldlevel", 100)
+            vim.api.nvim_win_set_option(preview_winid, "wrap", false)
+            vim.api.nvim_win_set_option(preview_winid, "scrollbind", false)
+          end
+
+          utils.win_set_buf_noautocmd(preview_winid, bufnr)
+          self.state.winid = preview_winid
+          self.state.bufnr = bufnr
+
+          if do_preview then
+            entry.value.action:preview(function(preview)
+              if preview and preview.cmdline then
+                vim.api.nvim_buf_call(bufnr, function()
+                  term_ids[bufnr] = vim.fn.termopen(preview.cmdline)
+                end)
+              else
+                preview = preview or { syntax = "", text = "preview not available" }
+
+                vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(preview.text, "\n", true))
+                vim.api.nvim_buf_set_option(bufnr, "syntax", preview.syntax)
+              end
+            end)
+          end
+        end,
+        scroll_fn = function(self, direction)
+          if not self.state then
+            return
+          end
+
+          local count = math.abs(direction)
+          local term_id = term_ids[self.state.bufnr]
+          if term_id and job_is_running(term_id) then
+            local input = direction > 0 and "d" or "u"
+
+            local termcode = vim.api.nvim_replace_termcodes(count .. input, true, false, true)
+            vim.fn.chansend(term_id, termcode)
+          else
+            local input = direction > 0 and [[]] or [[]]
+
+            vim.api.nvim_win_call(self.state.winid, function()
+              vim.cmd([[normal! ]] .. count .. input)
+            end)
+          end
         end,
       }),
       finder = finders.new_table({
