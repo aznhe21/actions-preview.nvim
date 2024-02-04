@@ -36,6 +36,15 @@ require("actions-preview").setup {
   diff = {
     ctxlen = 3,
   },
+
+  -- priority list of external command to highlight diff
+  -- disabled by defalt, must be set by yourself
+  highlight_command = {
+    -- require("actions-preview.highlight").delta(),
+    -- require("actions-preview.highlight").diff_so_fancy(),
+    -- require("actions-preview.highlight").diff_highlight(),
+  },
+
   -- priority list of preferred backend
   backend = { "telescope", "nui" },
 
@@ -103,6 +112,54 @@ require("actions-preview").setup {
     ignore_whitespace = true,
   },
   telescope = require("telescope.themes").get_dropdown { winblend = 10 },
+}
+```
+
+### `highlight_command`
+
+![actions-preview-delta](https://github.com/aznhe21/actions-preview.nvim/assets/2226696/edf18d6b-fb3c-4cb9-9c46-ce689278dc75)
+
+You can highlight diff with an external command by setting this item. This item
+is a priority list, which searches for available commands from the top.
+
+```lua
+local hl = require("actions-preview.highlight")
+require("actions-preview").setup {
+  highlight_command = {
+    -- Highlight diff using delta: https://github.com/dandavison/delta
+    -- The argument is optional, in which case "delta" is assumed to be
+    -- specified.
+    hl.delta("path/to/delta --option1 --option2"),
+    -- You may need to specify "--no-gitconfig" since it is dependent on
+    -- the gitconfig of the project by default.
+    -- hl.delta("delta --no-gitconfig --side-by-side"),
+
+    -- Highlight diff using diff-so-fancy: https://github.com/so-fancy/diff-so-fancy
+    -- The arguments are optional, in which case ("diff-so-fancy", "less -R")
+    -- is assumed to be specified. The existence of less is optional.
+    hl.diff_so_fancy("path/to/diff-so-fancy --option1 --option2"),
+
+    -- Highlight diff using diff-highlight included in git-contrib.
+    -- The arguments are optional; the first argument is assumed to be
+    -- "diff-highlight" and the second argument is assumed to be 
+    -- `{ colordiff = "colordiff", pager = "less -R" }`. The existence of
+    -- colordiff and less is optional.
+    hl.diff_highlight(
+      "path/to/diff-highlight",
+      { colordiff = "path/to/colordiff" }
+    ),
+
+    -- And, you can use any command to highlight diff.
+    -- Define the pipeline by `hl.commands`.
+    hl.commands({
+      { cmd = "command-to-diff-highlight" },
+      -- `optional` can be used to define that the command is optional.
+      { cmd = "less -R", optional = true },
+    }),
+    -- If you use optional `less -R` (or similar command), you can also use `hl.with_pager`.
+    hl.with_pager("command-to-diff-highlight"),
+    -- hl.with_pager("command-to-diff-highlight", "custom-pager"),
+  },
 }
 ```
 
