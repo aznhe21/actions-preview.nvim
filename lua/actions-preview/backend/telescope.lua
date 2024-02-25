@@ -97,6 +97,10 @@ function M.select(config, acts)
           return {}
         end,
         teardown = function(self)
+          if not self.state then
+            return
+          end
+
           self.state.winid = nil
           self.state.bufnr = nil
 
