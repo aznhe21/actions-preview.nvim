@@ -122,6 +122,11 @@ require("actions-preview").setup {
 You can highlight diff with an external command by setting this item. This item
 is a priority list, which searches for available commands from the top.
 
+**NOTE for Windows users**: This feature only works with PowerShell and does not operate with cmd.exe.
+Therefore, you need to setup your neovim to use PowerShell by following the instructions in [`:help shell-powershell`].
+
+[`:help shell-powershell`]: https://neovim.io/doc/user/options.html#shell-powershell
+
 ```lua
 local hl = require("actions-preview.highlight")
 require("actions-preview").setup {
