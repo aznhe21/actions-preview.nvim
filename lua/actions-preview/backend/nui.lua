@@ -38,6 +38,8 @@ function M.select(config, actions)
   local nui_select
   local nui_layout
 
+  local focus_win = vim.api.nvim_get_current_win()
+
   nui_select = Menu(
     vim.tbl_deep_extend("force", config.select, {
       position = 0,
@@ -84,6 +86,7 @@ function M.select(config, actions)
       end,
       on_submit = function(item)
         item.action:apply()
+        vim.api.nvim_set_current_win(focus_win)
       end,
       on_close = function()
         for _, term_id in pairs(term_ids) do
@@ -97,6 +100,8 @@ function M.select(config, actions)
           popup:unmount()
         end
         nui_select:unmount()
+
+        vim.api.nvim_set_current_win(focus_win)
       end,
     }
   )
