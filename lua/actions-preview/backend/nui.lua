@@ -39,6 +39,26 @@ function M.select(config, actions)
   local nui_layout
 
   local focus_win = vim.api.nvim_get_current_win()
+  local cleanup = function()
+    for _, term_id in pairs(term_ids) do
+      if job_is_running(term_id) then
+        vim.fn.jobstop(term_id)
+      end
+    end
+
+    nui_preview_blank:unmount()
+    for _, popup in ipairs(nui_popups) do
+      popup:unmount()
+    end
+    nui_select:unmount()
+
+    vim.api.nvim_set_current_win(focus_win)
+  end
+
+  local lines = {}
+  for idx, action in ipairs(actions) do
+    table.insert(lines, Menu.item(action:title(), { index = idx, action = action }))
+  end
 
   nui_select = Menu(
     vim.tbl_deep_extend("force", config.select, {
@@ -51,15 +71,13 @@ function M.select(config, actions)
       },
     }),
     {
-      lines = vim.tbl_map(function(action)
-        return Menu.item(action:title(), { action = action })
-      end, actions),
+      lines = lines,
       keymap = config.keymap,
       on_change = function(item)
         local popup = nui_popups[item.index]
         if not popup then
           popup = create_popup()
-          nui_popups[item] = popup
+          nui_popups[item.index] = popup
         end
 
         nui_layout:update(create_layout_box(popup, nui_select))
@@ -85,24 +103,10 @@ function M.select(config, actions)
         end)
       end,
       on_submit = function(item)
+        cleanup()
         item.action:apply()
-        vim.api.nvim_set_current_win(focus_win)
       end,
-      on_close = function()
-        for _, term_id in pairs(term_ids) do
-          if job_is_running(term_id) then
-            vim.fn.jobstop(term_id)
-          end
-        end
-
-        nui_preview_blank:unmount()
-        for _, popup in ipairs(nui_popups) do
-          popup:unmount()
-        end
-        nui_select:unmount()
-
-        vim.api.nvim_set_current_win(focus_win)
-      end,
+      on_close = cleanup,
     }
   )
 
