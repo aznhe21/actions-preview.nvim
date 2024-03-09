@@ -40,6 +40,11 @@ function M.select(config, actions)
 
   local focus_win = vim.api.nvim_get_current_win()
 
+  local lines = {}
+  for idx, action in ipairs(actions) do
+    table.insert(lines, Menu.item(action:title(), { index = idx, action = action }))
+  end
+
   nui_select = Menu(
     vim.tbl_deep_extend("force", config.select, {
       position = 0,
@@ -51,15 +56,13 @@ function M.select(config, actions)
       },
     }),
     {
-      lines = vim.tbl_map(function(action)
-        return Menu.item(action:title(), { action = action })
-      end, actions),
+      lines = lines,
       keymap = config.keymap,
       on_change = function(item)
         local popup = nui_popups[item.index]
         if not popup then
           popup = create_popup()
-          nui_popups[item] = popup
+          nui_popups[item.index] = popup
         end
 
         nui_layout:update(create_layout_box(popup, nui_select))
