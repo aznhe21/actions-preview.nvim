@@ -103,8 +103,8 @@ function M.select(config, actions)
         end)
       end,
       on_submit = function(item)
-        item.action:apply()
         cleanup()
+        item.action:apply()
       end,
       on_close = cleanup,
     }
