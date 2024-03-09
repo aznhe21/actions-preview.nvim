@@ -39,6 +39,21 @@ function M.select(config, actions)
   local nui_layout
 
   local focus_win = vim.api.nvim_get_current_win()
+  local cleanup = function()
+    for _, term_id in pairs(term_ids) do
+      if job_is_running(term_id) then
+        vim.fn.jobstop(term_id)
+      end
+    end
+
+    nui_preview_blank:unmount()
+    for _, popup in ipairs(nui_popups) do
+      popup:unmount()
+    end
+    nui_select:unmount()
+
+    vim.api.nvim_set_current_win(focus_win)
+  end
 
   local lines = {}
   for idx, action in ipairs(actions) do
@@ -89,23 +104,9 @@ function M.select(config, actions)
       end,
       on_submit = function(item)
         item.action:apply()
-        vim.api.nvim_set_current_win(focus_win)
+        cleanup()
       end,
-      on_close = function()
-        for _, term_id in pairs(term_ids) do
-          if job_is_running(term_id) then
-            vim.fn.jobstop(term_id)
-          end
-        end
-
-        nui_preview_blank:unmount()
-        for _, popup in ipairs(nui_popups) do
-          popup:unmount()
-        end
-        nui_select:unmount()
-
-        vim.api.nvim_set_current_win(focus_win)
-      end,
+      on_close = cleanup,
     }
   )
 
