@@ -53,6 +53,7 @@ function M.select(config, acts)
   local finders = require("telescope.finders")
   local conf = require("telescope.config").values
   local utils = require("telescope.utils")
+  local putils = require("telescope.previewers.utils")
 
   local opts = vim.deepcopy(config) or require("telescope.themes").get_dropdown()
 
@@ -147,7 +148,7 @@ function M.select(config, acts)
                 preview = preview or { syntax = "", text = "preview not available" }
 
                 vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(preview.text, "\n", true))
-                vim.api.nvim_buf_set_option(bufnr, "syntax", preview.syntax)
+                putils.highlighter(bufnr, preview.syntax, opts)
               end
             end)
           end
