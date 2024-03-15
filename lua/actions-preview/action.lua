@@ -13,7 +13,7 @@ end
 
 function Changes:diff(opts)
   opts = vim.tbl_extend("force", {
-    pseudo_args = "--code-actions",
+    pseudo_args = "--git",
   }, opts or {})
 
   local diff = ""
