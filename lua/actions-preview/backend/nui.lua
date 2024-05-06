@@ -77,37 +77,36 @@ function M.select(config, actions)
       keymap = config.keymap,
       on_change = function(item)
         local popup = nui_popups[item.index]
-        if not popup then
+        if popup then
+          nui_layout:update(create_layout_box(popup, nui_select))
+        else
           popup = create_popup()
           nui_popups[item.index] = popup
-        end
 
-        nui_layout:update(create_layout_box(popup, nui_select))
+          nui_layout:update(create_layout_box(popup, nui_select))
 
-        item.action:preview(function(preview)
-          if popup.bufnr == nil then
-            return
-          end
+          item.action:preview(function(preview)
+            if popup.bufnr == nil then
+              return
+            end
 
-          if preview and preview.cmdline then
-            if not term_ids[popup.bufnr] then
+            if preview and preview.cmdline then
               vim.api.nvim_buf_call(popup.bufnr, function()
                 term_ids[popup.bufnr] = vim.fn.termopen(preview.cmdline)
               end)
-            end
-          else
-            preview = preview or { syntax = "", lines = { "preview not available" } }
-
-            vim.api.nvim_buf_set_option(popup.bufnr, "modifiable", true)
-            vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, preview.lines)
-            if preview.syntax then
-              vim.treesitter.start(popup.bufnr, preview.syntax)
             else
-              vim.api.nvim_buf_set_option(popup.bufnr, "syntax", preview.syntax)
+              preview = preview or { syntax = "", lines = { "preview not available" } }
+
+              vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, preview.lines)
+              if preview.syntax then
+                vim.treesitter.start(popup.bufnr, preview.syntax)
+              else
+                vim.api.nvim_buf_set_option(popup.bufnr, "syntax", preview.syntax)
+              end
+              vim.api.nvim_buf_set_option(popup.bufnr, "modifiable", false)
             end
-            vim.api.nvim_buf_set_option(popup.bufnr, "modifiable", false)
-          end
-        end)
+          end)
+        end
       end,
       on_submit = function(item)
         cleanup()
