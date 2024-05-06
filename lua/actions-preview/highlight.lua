@@ -11,7 +11,8 @@ function M.commands(commands)
       return true
     end,
     make_cmdline = function(changes)
-      local cmdline = string.format("echo %s", vim.fn.shellescape(changes:diff()))
+      local diff = table.concat(changes:diff(), "\n")
+      local cmdline = string.format("echo %s", vim.fn.shellescape(diff))
       for _, cmd in ipairs(commands) do
         if vim.fn.executable(cmd.cmd:match("^%S+")) == 1 then
           cmdline = cmdline .. " | " .. cmd.cmd
@@ -34,7 +35,8 @@ function M.delta(cmd)
       return vim.fn.executable(cmd:match("^%S+")) == 1
     end,
     make_cmdline = function(changes)
-      return string.format("echo %s | %s", vim.fn.shellescape(changes:diff({ pseudo_args = "--git" })), cmd)
+      local diff = table.concat(changes:diff({ pseudo_args = "--git" }), "\n")
+      return string.format("echo %s | %s", vim.fn.shellescape(diff), cmd)
     end,
   }
 end
