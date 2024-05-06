@@ -136,30 +136,12 @@ end
 local Action = {}
 M.Action = Action
 
-function Action.new(context, client_id, action)
-  local resolved = action
-  local client = vim.lsp.get_client_by_id(client_id)
-  if
-    not action.edit
-    and client
-    and type(client.server_capabilities.codeActionProvider) == "table"
-    and client.server_capabilities.codeActionProvider.resolveProvider
-  then
-    -- needs to be resolved
-    resolved = nil
-  end
-
-  return setmetatable({
-    context = context,
-    client_id = client_id,
-    action = action,
-    resolved = resolved,
-    previewed = nil,
-  }, { __index = Action })
+function Action.new(item)
+  return setmetatable(item, { __index = Action })
 end
 
 function Action:client_name()
-  local client = vim.lsp.get_client_by_id(self.client_id)
+  local client = vim.lsp.get_client_by_id(self.ctx.client_id)
   return client and client.name or ""
 end
 
@@ -174,16 +156,29 @@ function Action:resolve(callback)
     return
   end
 
-  local client = vim.lsp.get_client_by_id(self.client_id)
-  client.request("codeAction/resolve", self.action, function(err, resolved_action)
-    if err then
-      vim.notify(err.code .. ": " .. err.message, vim.log.levels.WARN)
-      self.resolved = self.action
-    else
-      self.resolved = resolved_action
-    end
+  local client = assert(vim.lsp.get_client_by_id(self.ctx.client_id))
+  local action = self.action
+  local bufnr = assert(self.ctx.bufnr, "Must have buffer number")
+
+  local reg = client.dynamic_capabilities:get("textDocument/codeAction", { bufnr = bufnr })
+
+  local supports_resolve = vim.tbl_get(reg or {}, "registerOptions", "resolveProvider")
+    or client.supports_method("codeAction/resolve")
+
+  if not action.edit and client and supports_resolve then
+    client.request("codeAction/resolve", self.action, function(err, resolved_action)
+      if err then
+        vim.notify(err.code .. ": " .. err.message, vim.log.levels.WARN)
+        self.resolved = self.action
+      else
+        self.resolved = resolved_action
+      end
+      callback(self.resolved)
+    end, bufnr)
+  else
+    self.resolved = self.action
     callback(self.resolved)
-  end)
+  end
 end
 
 function Action:preview(callback)
@@ -193,7 +188,7 @@ function Action:preview(callback)
   end
 
   self:resolve(function(action)
-    local client = vim.lsp.get_client_by_id(self.client_id)
+    local client = vim.lsp.get_client_by_id(self.ctx.client_id)
 
     local changes = action.edit and get_changes(action.edit, client.offset_encoding)
     if changes then
@@ -216,35 +211,6 @@ function Action:preview(callback)
     end
 
     callback(self.previewed)
-  end)
-end
-
--- based on https://github.com/neovim/neovim/blob/v0.7.2/runtime/lua/vim/lsp/buf.lua#L506-L529
-function Action:apply()
-  self:resolve(function(action)
-    local client = vim.lsp.get_client_by_id(self.client_id)
-
-    if action.edit then
-      vim.lsp.util.apply_workspace_edit(action.edit, client.offset_encoding)
-    end
-    if action.command then
-      local command = type(action.command) == "table" and action.command or action
-      local fn = client.commands[command.command] or vim.lsp.commands[command.command]
-      if fn then
-        local enriched_ctx = vim.deepcopy(self.context)
-        enriched_ctx.client_id = client.id
-        fn(command, enriched_ctx)
-      else
-        -- Not using command directly to exclude extra properties,
-        -- see https://github.com/python-lsp/python-lsp-server/issues/146
-        local params = {
-          command = command.command,
-          arguments = command.arguments,
-          workDoneToken = command.workDoneToken,
-        }
-        client.request("workspace/executeCommand", params, nil, self.context.bufnr)
-      end
-    end
   end)
 end
 
