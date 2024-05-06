@@ -100,7 +100,11 @@ function M.select(config, actions)
 
             vim.api.nvim_buf_set_option(popup.bufnr, "modifiable", true)
             vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, preview.lines)
-            vim.api.nvim_buf_set_option(popup.bufnr, "syntax", preview.syntax)
+            if preview.syntax then
+              vim.treesitter.start(popup.bufnr, preview.syntax)
+            else
+              vim.api.nvim_buf_set_option(popup.bufnr, "syntax", preview.syntax)
+            end
             vim.api.nvim_buf_set_option(popup.bufnr, "modifiable", false)
           end
         end)
