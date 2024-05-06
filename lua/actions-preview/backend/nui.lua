@@ -52,7 +52,9 @@ function M.select(config, actions)
     end
     nui_select:unmount()
 
-    vim.api.nvim_set_current_win(focus_win)
+    if vim.api.nvim_win_is_valid(focus_win) then
+      vim.api.nvim_set_current_win(focus_win)
+    end
   end
 
   local lines = {}
