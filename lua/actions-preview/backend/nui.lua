@@ -94,10 +94,10 @@ function M.select(config, actions)
               end)
             end
           else
-            preview = preview or { syntax = "", text = "preview not available" }
+            preview = preview or { syntax = "", lines = { "preview not available" } }
 
             vim.api.nvim_buf_set_option(popup.bufnr, "modifiable", true)
-            vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, vim.split(preview.text, "\n", true))
+            vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, preview.lines)
             vim.api.nvim_buf_set_option(popup.bufnr, "syntax", preview.syntax)
             vim.api.nvim_buf_set_option(popup.bufnr, "modifiable", false)
           end

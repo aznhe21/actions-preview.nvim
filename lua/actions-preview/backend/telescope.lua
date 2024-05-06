@@ -145,9 +145,9 @@ function M.select(config, acts)
                   term_ids[bufnr] = vim.fn.termopen(preview.cmdline)
                 end)
               else
-                preview = preview or { syntax = "", text = "preview not available" }
+                preview = preview or { syntax = "", lines = { "preview not available" } }
 
-                vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(preview.text, "\n", true))
+                vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, preview.lines)
                 putils.highlighter(bufnr, preview.syntax, opts)
               end
             end)

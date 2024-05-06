@@ -16,53 +16,44 @@ function Changes:diff(opts)
     pseudo_args = "--code-actions",
   }, opts or {})
 
-  local diff = ""
+  local lines = {}
   for _, change in ipairs(self.changes) do
     -- imitate git diff
     if change.kind == "rename" then
-      diff = diff .. string.format("diff %s a/%s b/%s\n", opts.pseudo_args, change.old_path, change.new_path)
-      diff = diff .. string.format("rename from %s\n", change.old_path)
-      diff = diff .. string.format("rename to %s\n", change.new_path)
-      diff = diff .. "\n"
+      table.insert(lines, string.format("diff %s a/%s b/%s", opts.pseudo_args, change.old_path, change.new_path))
+      table.insert(lines, string.format("rename from %s", change.old_path))
+      table.insert(lines, string.format("rename to %s", change.new_path))
+      table.insert(lines, "")
     elseif change.kind == "create" then
-      diff = diff .. string.format("diff %s a/%s b/%s\n", opts.pseudo_args, change.path, change.path)
+      table.insert(lines, string.format("diff %s a/%s b/%s", opts.pseudo_args, change.path, change.path))
       -- delta needs file mode
-      diff = diff .. "new file mode 100644\n"
+      table.insert(lines, "new file mode 100644")
       -- diff-so-fancy needs index
-      diff = diff .. "index 0000000..fffffff\n"
-      diff = diff .. "\n"
+      table.insert(lines, "index 0000000..fffffff")
+      table.insert(lines, "")
     elseif change.kind == "delete" then
-      diff = diff .. string.format("diff %s a/%s b/%s\n", opts.pseudo_args, change.path, change.path)
-      diff = diff .. string.format("--- a/%s\n", change.path)
-      diff = diff .. "+++ /dev/null\n"
-      diff = diff .. "\n"
+      table.insert(lines, string.format("diff %s a/%s b/%s", opts.pseudo_args, change.path, change.path))
+      table.insert(lines, string.format("--- a/%s", change.path))
+      table.insert(lines, "+++ /dev/null")
+      table.insert(lines, "")
     elseif change.kind == "edit" then
-      diff = diff .. string.format("diff %s a/%s b/%s\n", opts.pseudo_args, change.path, change.path)
-      diff = diff .. string.format("--- a/%s\n", change.path)
-      diff = diff .. string.format("+++ b/%s\n", change.path)
-      diff = diff .. vim.trim(vim.diff(change.old, change.new, config.diff)) .. "\n"
-      diff = diff .. "\n"
+      local text = vim.diff(table.concat(change.old, "\n") .. "\n", table.concat(change.new, "\n") .. "\n", config.diff)
+
+      table.insert(lines, string.format("diff %s a/%s b/%s", opts.pseudo_args, change.path, change.path))
+      table.insert(lines, string.format("--- a/%s", change.path))
+      table.insert(lines, string.format("+++ b/%s", change.path))
+      for line in vim.gsplit(vim.trim(text), "\n", true) do
+        table.insert(lines, line)
+      end
+      table.insert(lines, "")
     end
   end
-  return diff
+  return lines
 end
 
 local function get_lines(bufnr)
   vim.fn.bufload(bufnr)
   return vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-end
-
-local function get_eol(bufnr)
-  local ff = vim.api.nvim_buf_get_option(bufnr, "fileformat")
-  if ff == "dos" then
-    return "\r\n"
-  elseif ff == "unix" then
-    return "\n"
-  elseif ff == "mac" then
-    return "\r"
-  else
-    error("invalid fileformat")
-  end
 end
 
 local function apply_text_edits(text_edits, lines, offset_encoding)
@@ -74,12 +65,10 @@ local function apply_text_edits(text_edits, lines, offset_encoding)
   return new_lines
 end
 
-local function edit_buffer_text(text_edits, bufnr, offset_encoding)
-  local eol = get_eol(bufnr)
-
+local function edit_buffer_lines(text_edits, bufnr, offset_encoding)
   local lines = get_lines(bufnr)
   local new_lines = apply_text_edits(text_edits, lines, offset_encoding)
-  return table.concat(lines, eol) .. eol, table.concat(new_lines, eol) .. eol
+  return lines, new_lines
 end
 
 local function get_changes(workspace_edit, offset_encoding)
@@ -116,7 +105,7 @@ local function get_changes(workspace_edit, offset_encoding)
         local uri = change.textDocument.uri
         local path = vim.fn.fnamemodify(vim.uri_to_fname(uri), ":.")
         local bufnr = vim.uri_to_bufnr(uri)
-        local old, new = edit_buffer_text(change.edits, bufnr, offset_encoding)
+        local old, new = edit_buffer_lines(change.edits, bufnr, offset_encoding)
 
         table.insert(changes, {
           kind = "edit",
@@ -130,7 +119,7 @@ local function get_changes(workspace_edit, offset_encoding)
     for uri, edits in pairs(workspace_edit.changes) do
       local path = vim.fn.fnamemodify(vim.uri_to_fname(uri), ":.")
       local bufnr = vim.uri_to_bufnr(uri)
-      local old, new = edit_buffer_text(edits, bufnr, offset_encoding)
+      local old, new = edit_buffer_lines(edits, bufnr, offset_encoding)
 
       table.insert(changes, {
         kind = "edit",
@@ -213,7 +202,7 @@ function Action:preview(callback)
         cmdline = hl_cmd.make_cmdline(changes),
       } or {
         syntax = "diff",
-        text = changes:diff(),
+        lines = changes:diff(),
       }
     elseif action.command then
       local command = type(action.command) == "table" and action.command or action
