@@ -41,7 +41,7 @@ local function range_from_selection(bufnr, mode)
   }
 end
 
-local function on_code_action_results(results, ctx)
+local function on_code_action_results(results, ctx, options)
   local actions = {}
   for client_id, result in pairs(results) do
     for _, action in pairs(result.result or {}) do
@@ -53,14 +53,18 @@ local function on_code_action_results(results, ctx)
     return
   end
 
+  if options.apply and #actions == 1 then
+    actions[1]:apply()
+    return
+  end
   backend.select(config, actions)
 end
 
-local function code_action_request(params)
+local function code_action_request(params, options)
   local bufnr = vim.api.nvim_get_current_buf()
   local method = "textDocument/codeAction"
   vim.lsp.buf_request_all(bufnr, method, params, function(results)
-    on_code_action_results(results, { bufnr = bufnr, method = method, params = params })
+    on_code_action_results(results, { bufnr = bufnr, method = method, params = params }, options)
   end)
 end
 
@@ -82,11 +86,16 @@ end
 ---               List of LSP `CodeActionKind`s used to filter the code actions.
 ---               Most language servers support values like `refactor`
 ---               or `quickfix`.
+---        - triggerKind (integer|nil):
+---               The reason why code actions were requested.
 ---  - range: (table|nil)
 ---           Range for which code actions should be requested.
 ---           If in visual mode this defaults to the active selection.
 ---           Table must contain `start` and `end` keys with {row, col} tuples
 ---           using mark-like indexing. See |api-indexing|
+---  - apply: (boolean|nil)
+---           When set to `true`, and there is just one remaining action (after filtering),
+---           the action is applied without user query.
 ---
 ---@see https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeAction
 function M.code_actions(options)
@@ -111,7 +120,7 @@ function M.code_actions(options)
     params = vim.lsp.util.make_range_params()
   end
   params.context = context
-  code_action_request(params)
+  code_action_request(params, options)
 end
 
 return M
