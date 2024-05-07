@@ -87,7 +87,7 @@ function M.select(config, actions)
               preview = preview or { syntax = "", lines = { "preview not available" } }
 
               vim.api.nvim_buf_set_lines(cache.bufnr, 0, -1, false, preview.lines)
-              if preview.syntax then
+              if preview.syntax ~= "" then
                 vim.treesitter.start(cache.bufnr, preview.syntax)
               else
                 vim.api.nvim_buf_set_option(cache.bufnr, "syntax", preview.syntax)
