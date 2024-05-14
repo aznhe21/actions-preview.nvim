@@ -15,9 +15,9 @@ function M.get_backend(config)
   error("actions-preview: No backend available. Do you have any backend installed?")
 end
 
-function M.select(config, actions)
+function M.select(config, actions, on_choice)
   local mod, backend = M.get_backend(config)
-  mod.select(config[backend], actions)
+  mod.select(config[backend], actions, on_choice)
 end
 
 return M

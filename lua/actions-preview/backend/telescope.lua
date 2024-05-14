@@ -45,7 +45,7 @@ function M.is_supported()
   return ok
 end
 
-function M.select(config, acts)
+function M.select(config, acts, on_choice)
   local actions = require("telescope.actions")
   local state = require("telescope.actions.state")
   local pickers = require("telescope.pickers")
@@ -193,7 +193,7 @@ function M.select(config, acts)
             return
           end
 
-          selection.value.action:apply()
+          on_choice(selection.value.action)
         end)
 
         return true

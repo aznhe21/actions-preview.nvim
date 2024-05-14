@@ -9,7 +9,7 @@ function M.is_supported()
   return ok
 end
 
-function M.select(config, actions)
+function M.select(config, actions, on_choice)
   local Layout = require("nui.layout")
   local Menu = require("nui.menu")
   local Popup = require("nui.popup")
@@ -99,7 +99,7 @@ function M.select(config, actions)
       end,
       on_submit = function(item)
         cleanup()
-        item.action:apply()
+        on_choice(item.action)
       end,
       on_close = cleanup,
     }
