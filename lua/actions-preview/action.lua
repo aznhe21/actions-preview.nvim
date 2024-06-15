@@ -136,22 +136,29 @@ end
 local Action = {}
 M.Action = Action
 
-function Action.new(context, client_id, action)
+function Action.new(context, action)
   local resolved = action
-  local client = vim.lsp.get_client_by_id(client_id)
-  if
-    not action.edit
-    and client
-    and type(client.server_capabilities.codeActionProvider) == "table"
-    and client.server_capabilities.codeActionProvider.resolveProvider
-  then
+  local client = assert(vim.lsp.get_client_by_id(context.client_id))
+  local bufnr = assert(context.bufnr, "Must have buffer number")
+
+  local supports_resolve
+  if client.dynamic_capabilities then
+    local reg = client.dynamic_capabilities:get("textDocument/codeAction", { bufnr = bufnr })
+
+    supports_resolve = vim.tbl_get(reg or {}, "registerOptions", "resolveProvider")
+      or client.supports_method("codeAction/resolve")
+  else
+    supports_resolve = type(client.server_capabilities.codeActionProvider) == "table"
+      and client.server_capabilities.codeActionProvider.resolveProvider
+  end
+
+  if not action.edit and client and supports_resolve then
     -- needs to be resolved
     resolved = nil
   end
 
   return setmetatable({
     context = context,
-    client_id = client_id,
     action = action,
     resolved = resolved,
     previewed = nil,
@@ -159,7 +166,7 @@ function Action.new(context, client_id, action)
 end
 
 function Action:client_name()
-  local client = vim.lsp.get_client_by_id(self.client_id)
+  local client = vim.lsp.get_client_by_id(self.context.client_id)
   return client and client.name or ""
 end
 
@@ -174,16 +181,18 @@ function Action:resolve(callback)
     return
   end
 
-  local client = vim.lsp.get_client_by_id(self.client_id)
+  local client = vim.lsp.get_client_by_id(self.context.client_id)
   client.request("codeAction/resolve", self.action, function(err, resolved_action)
     if err then
-      vim.notify(err.code .. ": " .. err.message, vim.log.levels.WARN)
+      if not self.action.command then
+        vim.notify(err.code .. ": " .. err.message, vim.log.levels.ERROR)
+      end
       self.resolved = self.action
     else
       self.resolved = resolved_action
     end
     callback(self.resolved)
-  end)
+  end, self.context.bufnr)
 end
 
 function Action:preview(callback)
@@ -193,7 +202,7 @@ function Action:preview(callback)
   end
 
   self:resolve(function(action)
-    local client = vim.lsp.get_client_by_id(self.client_id)
+    local client = vim.lsp.get_client_by_id(self.context.client_id)
 
     local changes = action.edit and get_changes(action.edit, client.offset_encoding)
     if changes then
@@ -222,7 +231,7 @@ end
 -- based on https://github.com/neovim/neovim/blob/v0.7.2/runtime/lua/vim/lsp/buf.lua#L506-L529
 function Action:apply()
   self:resolve(function(action)
-    local client = vim.lsp.get_client_by_id(self.client_id)
+    local client = vim.lsp.get_client_by_id(self.context.client_id)
 
     if action.edit then
       vim.lsp.util.apply_workspace_edit(action.edit, client.offset_encoding)
