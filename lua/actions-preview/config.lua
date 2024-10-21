@@ -1,5 +1,5 @@
 local default_config = {
-  backend = { "telescope", "nui" },
+  backend = { "telescope", "minipick", "nui" },
   telescope = nil,
   nui = {
     dir = "col",
