@@ -33,7 +33,7 @@ function M.select(config, actions)
     item.action:preview(function(preview)
       if preview and preview.cmdline then
         vim.api.nvim_buf_call(buf_id, function()
-          term_ids[buf_id] = vim.pn.termopen(preview.cmdline)
+          term_ids[buf_id] = vim.fn.termopen(preview.cmdline)
         end)
       else
         preview = preview or { syntax = "", lines = { "preview not available" } }
