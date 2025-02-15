@@ -6,9 +6,11 @@ A neovim plugin that preview code with LSP code actions applied.
 
 The following backends are available:
 - [telescope.nvim]
+- [mini.pick]
 - [nui.nvim]
 
 [telescope.nvim]: https://github.com/nvim-telescope/telescope.nvim
+[mini.pick]: https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-pick.md
 [nui.nvim]: https://github.com/MunifTanjim/nui.nvim
 
 ## Installation
@@ -46,7 +48,7 @@ require("actions-preview").setup {
   },
 
   -- priority list of preferred backend
-  backend = { "telescope", "nui" },
+  backend = { "telescope", "minipick", "nui" },
 
   -- options related to telescope.nvim
   telescope = vim.tbl_extend(
