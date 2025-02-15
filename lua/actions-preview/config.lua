@@ -52,6 +52,12 @@ function M.setup(opts)
   for k, v in pairs(config) do
     M[k] = v
   end
+
+  for i, cmd in ipairs(M.highlight_command) do
+    if type(cmd) == "function" then
+      M.highlight_command[i] = cmd()
+    end
+  end
 end
 
 function M.get_highlight_command()
