@@ -166,6 +166,12 @@ require("actions-preview").setup {
     -- If you use optional `less -R` (or similar command), you can also use `hl.with_pager`.
     hl.with_pager("command-to-diff-highlight"),
     -- hl.with_pager("command-to-diff-highlight", "custom-pager"),
+
+    -- Functions can also be specified for items. Functions are executed during setup.
+    -- This is useful for `require(...)` at definition time, such as in lazy.nvim.
+    function()
+        return require("actions-preview.highlight").delta()
+    end,
   },
 }
 ```
