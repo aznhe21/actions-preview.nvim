@@ -126,7 +126,7 @@ function M.setup(opts)
   config.setup(opts)
 end
 
--- based on https://github.com/neovim/neovim/blob/v0.10.0/runtime/lua/vim/lsp/buf.lua#L824-L891
+-- based on https://github.com/neovim/neovim/blob/v0.10.4/runtime/lua/vim/lsp/buf.lua#L824-L903
 --- Selects a code action available at the current
 --- cursor position.
 ---
@@ -142,13 +142,9 @@ function M.code_actions(opts)
   if opts.diagnostics or opts.only then
     opts = { options = opts }
   end
-  local context = opts.context or {}
+  local context = opts.context and vim.deepcopy(opts.context) or {}
   if not context.triggerKind and vim.lsp.protocol.CodeActionTriggerKind then
     context.triggerKind = vim.lsp.protocol.CodeActionTriggerKind.Invoked
-  end
-  if not context.diagnostics then
-    local bufnr = vim.api.nvim_get_current_buf()
-    context.diagnostics = vim.lsp.diagnostic.get_line_diagnostics(bufnr)
   end
   local mode = vim.api.nvim_get_mode().mode
   local bufnr = vim.api.nvim_get_current_buf()
@@ -191,7 +187,22 @@ function M.code_actions(opts)
     else
       params = vim.lsp.util.make_range_params(win, client.offset_encoding)
     end
-    params.context = context
+    if context.diagnostics then
+      params.context = context
+    else
+      local ns_push = vim.lsp.diagnostic.get_namespace(client.id, false)
+      local ns_pull = vim.lsp.diagnostic.get_namespace(client.id, true)
+      local diagnostics = {}
+      local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
+      vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_pull, lnum = lnum }))
+      vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_push, lnum = lnum }))
+      params.context = vim.tbl_extend("force", context, {
+        ---@diagnostic disable-next-line: no-unknown
+        diagnostics = vim.tbl_map(function(d)
+          return d.user_data.lsp
+        end, diagnostics),
+      })
+    end
     client.request("textDocument/codeAction", params, on_result, bufnr)
   end
 end
