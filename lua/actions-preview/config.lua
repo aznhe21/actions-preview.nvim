@@ -1,5 +1,5 @@
 local default_config = {
-  backend = { "telescope", "minipick", "nui" },
+  backend = { "telescope", "minipick", "snacks", "nui" },
   telescope = nil,
   nui = {
     dir = "col",
@@ -28,6 +28,10 @@ local default_config = {
         padding = { 0, 1 },
       },
     },
+  },
+  ---@type snacks.picker.Config
+  snacks = {
+    layout = { preset = "default" },
   },
   diff = {
     ctxlen = 3,
