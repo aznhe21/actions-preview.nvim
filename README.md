@@ -8,10 +8,12 @@ The following backends are available:
 - [telescope.nvim]
 - [mini.pick]
 - [nui.nvim]
+- [snacks.nvim]
 
 [telescope.nvim]: https://github.com/nvim-telescope/telescope.nvim
 [mini.pick]: https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-pick.md
 [nui.nvim]: https://github.com/MunifTanjim/nui.nvim
+[snacks.nvim]: https://github.com/folke/snacks.nvim
 
 ## Installation
 
@@ -48,7 +50,7 @@ require("actions-preview").setup {
   },
 
   -- priority list of preferred backend
-  backend = { "telescope", "minipick", "nui" },
+  backend = { "telescope", "minipick", "snacks", "nui" },
 
   -- options related to telescope.nvim
   telescope = vim.tbl_extend(
@@ -101,6 +103,12 @@ require("actions-preview").setup {
         padding = { 0, 1 },
       },
     },
+  },
+
+  --- options for snacks picker
+  ---@type snacks.picker.Config
+  snacks = {
+    layout = { preset = "default" },
   },
 }
 ```
