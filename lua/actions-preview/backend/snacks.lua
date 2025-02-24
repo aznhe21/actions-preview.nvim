@@ -39,21 +39,23 @@ end
 local function actions_to_items(actions)
   ---@type snacks.picker.finder.Item[]
   local items = {}
-  for _, action in ipairs(actions) do
-    local item = { text = action:title(), action = action }
-    table.insert(items, item)
+  for idx, action in ipairs(actions) do
+    table.insert(items, {
+      -- make sure we can search by index or client name
+      text = string.format("%d %s %s", idx, action:title(), action:client_name()),
+
+      action = action,
+
+      -- used by `Snacks.picker` builtin `ui_select` formatter
+      item = {
+        idx = idx,
+        action = action.action,
+        ctx = action.context,
+      },
+    })
   end
   return items
 end
-
----@type snacks.picker.Config
-local basic_snacks_opts = {
-  title = "Code Actions",
-  items = {},
-  format = "text",
-  preview = preview,
-  confirm = confirm
-}
 
 function M.is_supported()
   local ok, _ = pcall(require, "snacks.picker")
@@ -61,8 +63,14 @@ function M.is_supported()
 end
 
 function M.select(config, actions)
-  local opts = vim.tbl_deep_extend('force', basic_snacks_opts, config or {})
+  local opts = vim.tbl_deep_extend("force", {
+    title = "Code Actions",
+    format = require("snacks.picker.format").ui_select("codeaction", #actions),
+    preview = preview,
+    confirm = confirm,
+  }, config or {})
   opts.items = actions_to_items(actions)
+
   require("snacks.picker").pick(nil, opts)
 end
 
