@@ -1,5 +1,24 @@
 local M = {}
 
+--- function called to format item to list entry
+---@param item snacks.picker.finder.Item
+local function format(item)
+  local ret = {} ---@type snacks.picker.Highlight[]
+
+  local idx = ("%%%ds."):format(#tostring(item._count)):format(item.idx)
+  ret[#ret + 1] = { idx, "SnacksPickerIdx" }
+
+  ret[#ret + 1] = { " " }
+  ret[#ret + 1] = { item.title }
+
+  if item.client ~= "" then
+    ret[#ret + 1] = { " " }
+    ret[#ret + 1] = { ("[%s]"):format(item.client), "SnacksPickerSpecial" }
+  end
+
+  return ret
+end
+
 --- function called to preview item
 --- taken from minipick backend
 ---@type snacks.picker.preview
@@ -37,25 +56,36 @@ end
 ---@param actions table
 ---@return snacks.picker.finder.Item[]
 local function actions_to_items(actions)
-  ---@type snacks.picker.finder.Item[]
-  local items = {}
+  local count = #actions
+  local items = {} ---@type snacks.picker.finder.Item[]
+
   for idx, action in ipairs(actions) do
+    local title = action:title()
+    local client = action:client_name()
+
     table.insert(items, {
       -- make sure we can search by index or client name
-      text = string.format("%d %s %s", idx, action:title(), action:client_name()),
-
+      text = string.format("%d. %s %s", idx, title, client),
+      idx = idx,
+      title = title,
+      client = client,
       action = action,
-
-      -- used by `Snacks.picker` builtin `ui_select` formatter
-      item = {
-        idx = idx,
-        action = action.action,
-        ctx = action.context,
-      },
+      -- used for adding padding to index in format function
+      _count = count,
     })
   end
+
   return items
 end
+
+---@type snacks.picker.Config
+local basic_snacks_opts = {
+  title = "Code Actions",
+  items = {},
+  format = format,
+  preview = preview,
+  confirm = confirm,
+}
 
 function M.is_supported()
   local ok, _ = pcall(require, "snacks.picker")
@@ -63,14 +93,8 @@ function M.is_supported()
 end
 
 function M.select(config, actions)
-  local opts = vim.tbl_deep_extend("force", {
-    title = "Code Actions",
-    format = require("snacks.picker.format").ui_select("codeaction", #actions),
-    preview = preview,
-    confirm = confirm,
-  }, config or {})
+  local opts = vim.tbl_deep_extend("force", basic_snacks_opts, config or {})
   opts.items = actions_to_items(actions)
-
   require("snacks.picker").pick(nil, opts)
 end
 
