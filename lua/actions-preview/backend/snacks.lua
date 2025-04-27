@@ -26,6 +26,11 @@ local preview = function(ctx)
   local item = ctx.item
   local buf_id = ctx.preview:scratch()
   item.action:preview(function(preview)
+    -- Add a check to ensure the buffer is still valid before operating on it
+    if not vim.api.nvim_buf_is_valid(buf_id) then
+      return
+    end
+
     if preview and preview.cmdline then
       vim.api.nvim_buf_call(buf_id, function()
         vim.fn.termopen(preview.cmdline)
