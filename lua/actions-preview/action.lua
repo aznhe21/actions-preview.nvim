@@ -202,6 +202,10 @@ function Action:preview(callback)
   end
 
   self:resolve(function(action)
+    if not action then
+      return
+    end
+      
     local client = vim.lsp.get_client_by_id(self.context.client_id)
 
     local changes = action.edit and get_changes(action.edit, client.offset_encoding)
