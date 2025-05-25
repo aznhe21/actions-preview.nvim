@@ -147,6 +147,10 @@ function M.select(config, acts)
               else
                 preview = preview or { syntax = "", lines = { "preview not available" } }
 
+                if not vim.api.nvim_buf_is_valid(bufnr) then
+                  return
+                end
+                    
                 vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, preview.lines)
                 putils.highlighter(bufnr, preview.syntax, opts)
               end
