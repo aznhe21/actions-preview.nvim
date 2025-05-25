@@ -188,6 +188,8 @@ function Action:resolve(callback)
         vim.notify(err.code .. ": " .. err.message, vim.log.levels.ERROR)
       end
       self.resolved = self.action
+    elseif not resolved_action then
+      self.resolved = self.action
     else
       self.resolved = resolved_action
     end
@@ -202,10 +204,6 @@ function Action:preview(callback)
   end
 
   self:resolve(function(action)
-    if not action then
-      return
-    end
-      
     local client = vim.lsp.get_client_by_id(self.context.client_id)
 
     local changes = action.edit and get_changes(action.edit, client.offset_encoding)
