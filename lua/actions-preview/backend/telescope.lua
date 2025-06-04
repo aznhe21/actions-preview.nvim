@@ -140,6 +140,10 @@ function M.select(config, acts)
 
           if do_preview then
             entry.value.action:preview(function(preview)
+              if not vim.api.nvim_buf_is_valid(bufnr) then
+                return
+              end
+                    
               if preview and preview.cmdline then
                 vim.api.nvim_buf_call(bufnr, function()
                   term_ids[bufnr] = vim.fn.termopen(preview.cmdline)
