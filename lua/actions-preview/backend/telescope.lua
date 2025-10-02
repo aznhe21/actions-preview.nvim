@@ -140,6 +140,10 @@ function M.select(config, acts)
 
           if do_preview then
             entry.value.action:preview(function(preview)
+              if not vim.api.nvim_buf_is_valid(bufnr) then
+                return
+              end
+                    
               if preview and preview.cmdline then
                 vim.api.nvim_buf_call(bufnr, function()
                   term_ids[bufnr] = vim.fn.termopen(preview.cmdline)
@@ -147,10 +151,6 @@ function M.select(config, acts)
               else
                 preview = preview or { syntax = "", lines = { "preview not available" } }
 
-                if not vim.api.nvim_buf_is_valid(bufnr) then
-                  return
-                end
-                    
                 vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, preview.lines)
                 putils.highlighter(bufnr, preview.syntax, opts)
               end
