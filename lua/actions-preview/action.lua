@@ -188,10 +188,8 @@ function Action:resolve(callback)
         vim.notify(err.code .. ": " .. err.message, vim.log.levels.ERROR)
       end
       self.resolved = self.action
-    elseif not resolved_action then
-      self.resolved = self.action
     else
-      self.resolved = resolved_action
+      self.resolved = resolved_action or self.action
     end
     callback(self.resolved)
   end, self.context.bufnr)
