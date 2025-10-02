@@ -27,7 +27,7 @@ local function lsp_get_clients(filter)
       and (filter.id == nil or client.id == filter.id)
       and (filter.bufnr == nil or client.attached_buffers[bufnr])
       and (filter.name == nil or client.name == filter.name)
-      and (filter.method == nil or client.supports_method(filter.method))
+      and (filter.method == nil or client:supports_method(filter.method))
     then
       clients[#clients + 1] = client
     end
@@ -203,7 +203,7 @@ function M.code_actions(opts)
         end, diagnostics),
       })
     end
-    client.request("textDocument/codeAction", params, on_result, bufnr)
+    client:request("textDocument/codeAction", params, on_result, bufnr)
   end
 end
 

@@ -146,7 +146,7 @@ function Action.new(context, action)
     local reg = client.dynamic_capabilities:get("textDocument/codeAction", { bufnr = bufnr })
 
     supports_resolve = vim.tbl_get(reg or {}, "registerOptions", "resolveProvider")
-      or client.supports_method("codeAction/resolve")
+      or client:supports_method("codeAction/resolve")
   else
     supports_resolve = type(client.server_capabilities.codeActionProvider) == "table"
       and client.server_capabilities.codeActionProvider.resolveProvider
@@ -182,7 +182,7 @@ function Action:resolve(callback)
   end
 
   local client = vim.lsp.get_client_by_id(self.context.client_id)
-  client.request("codeAction/resolve", self.action, function(err, resolved_action)
+  client:request("codeAction/resolve", self.action, function(err, resolved_action)
     if err then
       if not self.action.command then
         vim.notify(err.code .. ": " .. err.message, vim.log.levels.ERROR)
@@ -251,7 +251,7 @@ function Action:apply()
           arguments = command.arguments,
           workDoneToken = command.workDoneToken,
         }
-        client.request("workspace/executeCommand", params, nil, self.context.bufnr)
+        client:request("workspace/executeCommand", params, nil, self.context.bufnr)
       end
     end
   end)
