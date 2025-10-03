@@ -189,7 +189,7 @@ function Action:resolve(callback)
       end
       self.resolved = self.action
     else
-      self.resolved = resolved_action
+      self.resolved = resolved_action or self.action
     end
     callback(self.resolved)
   end, self.context.bufnr)
