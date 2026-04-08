@@ -21,7 +21,7 @@ local function lsp_get_clients(filter)
     bufnr = vim.api.nvim_get_current_buf()
   end
 
-  for _, client in ipairs(vim.lsp.get_active_clients()) do
+  for _, client in ipairs(vim.lsp.get_clients()) do
     if
       true
       and (filter.id == nil or client.id == filter.id)
@@ -190,12 +190,10 @@ function M.code_actions(opts)
     if context.diagnostics then
       params.context = context
     else
-      local ns_push = vim.lsp.diagnostic.get_namespace(client.id, false)
-      local ns_pull = vim.lsp.diagnostic.get_namespace(client.id, true)
+      local ns = vim.diagnostic.get_namespace(client.id)
       local diagnostics = {}
       local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
-      vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_pull, lnum = lnum }))
-      vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_push, lnum = lnum }))
+      vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns, lnum = lnum }))
       params.context = vim.tbl_extend("force", context, {
         ---@diagnostic disable-next-line: no-unknown
         diagnostics = vim.tbl_map(function(d)
