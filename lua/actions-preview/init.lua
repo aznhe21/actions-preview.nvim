@@ -21,7 +21,7 @@ local function lsp_get_clients(filter)
     bufnr = vim.api.nvim_get_current_buf()
   end
 
-  for _, client in ipairs(vim.lsp.get_clients()) do
+  for _, client in ipairs(vim.lsp.get_active_clients()) do
     if
       true
       and (filter.id == nil or client.id == filter.id)
