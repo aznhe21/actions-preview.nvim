@@ -17,6 +17,8 @@ The following backends are available:
 
 ## Installation
 
+**Neovim 0.10+ is required.**
+
 Using [packer.nvim]:
 ```lua
 use {
