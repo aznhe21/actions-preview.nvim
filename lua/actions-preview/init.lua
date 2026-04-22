@@ -4,38 +4,6 @@ local Action = require("actions-preview.action").Action
 
 local M = {}
 
--- based on https://github.com/neovim/neovim/blob/v0.10.0/runtime/lua/vim/lsp.lua#L735-L780
-local function lsp_get_clients(filter)
-  if vim.lsp.get_clients then
-    return vim.lsp.get_clients(filter)
-  end
-
-  vim.validate({ filter = { filter, "t", true } })
-
-  filter = filter or {}
-
-  local clients = {}
-
-  local bufnr = filter.bufnr
-  if bufnr == nil or bufnr == 0 then
-    bufnr = vim.api.nvim_get_current_buf()
-  end
-
-  for _, client in ipairs(vim.lsp.get_active_clients()) do
-    if
-      true
-      and (filter.id == nil or client.id == filter.id)
-      and (filter.bufnr == nil or client.attached_buffers[bufnr])
-      and (filter.name == nil or client.name == filter.name)
-      and (filter.method == nil or client:supports_method(filter.method))
-    then
-      clients[#clients + 1] = client
-    end
-  end
-
-  return clients
-end
-
 -- based on https://github.com/neovim/neovim/blob/v0.8.0/runtime/lua/vim/lsp/buf.lua#L153-L178
 ---@private
 ---@param bufnr integer
@@ -149,10 +117,10 @@ function M.code_actions(opts)
   local mode = vim.api.nvim_get_mode().mode
   local bufnr = vim.api.nvim_get_current_buf()
   local win = vim.api.nvim_get_current_win()
-  local clients = lsp_get_clients({ bufnr = bufnr, method = "textDocument/codeAction" })
+  local clients = vim.lsp.get_clients({ bufnr = bufnr, method = "textDocument/codeAction" })
   local remaining = #clients
   if remaining == 0 then
-    if next(lsp_get_clients({ bufnr = bufnr })) then
+    if next(vim.lsp.get_clients({ bufnr = bufnr })) then
       vim.notify("code action is not supported by the server", vim.log.levels.WARN)
     end
     return
@@ -190,12 +158,28 @@ function M.code_actions(opts)
     if context.diagnostics then
       params.context = context
     else
-      local ns_push = vim.lsp.diagnostic.get_namespace(client.id, false)
-      local ns_pull = vim.lsp.diagnostic.get_namespace(client.id, true)
       local diagnostics = {}
-      local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
-      vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_pull, lnum = lnum }))
-      vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_push, lnum = lnum }))
+      if vim.fn.has("nvim-0.12") == 1 then
+        local ns_push = vim.lsp.diagnostic.get_namespace(client.id)
+        local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
+
+        client:_provider_foreach('textDocument/diagnostic', function(cap)
+          local ns_pull = vim.lsp.diagnostic.get_namespace(client.id, true, cap.identifier)
+          vim.list_extend(
+            diagnostics,
+            vim.diagnostic.get(bufnr, { namespace = ns_pull, lnum = lnum })
+          )
+        end)
+
+        vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_push, lnum = lnum }))
+      else
+        local ns_push = vim.lsp.diagnostic.get_namespace(client.id, false)
+        local ns_pull = vim.lsp.diagnostic.get_namespace(client.id, true)
+        local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
+        vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_pull, lnum = lnum }))
+        vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_push, lnum = lnum }))
+      end
+
       params.context = vim.tbl_extend("force", context, {
         ---@diagnostic disable-next-line: no-unknown
         diagnostics = vim.tbl_map(function(d)
